@@ -49,28 +49,26 @@ class Solver():
             #self.count[action] += 1;
 
 
-class EGreedy(Solver):
+class UCB(Solver):
     #某个算法具体的实现,
-    def __init__(self, bandit, epsilon = 0.01, init_prob= 1.0):
+    def __init__(self, bandit, coef = 1, init_prob= 1.0):
         super().__init__(bandit);
-        self.epsilon = epsilon;
+        self.coef = coef;
         self.estimates = np.array([init_prob] * self.bandit.k);
-        self.name = "EGreedy";
+        self.total = 0;
+        self.name = "UCB";
+        
     
     def run_one_step(self):
         #choose a k ,and updata the estimates
-        #随机 or 经验
-        if(np.random.random() < self.epsilon):
-            #随机
-            k = np.random.randint(0, self.bandit.k);
-        else:
-            #经验
-            k = np.argmax(self.estimates);
-        
+        self.total +=1;
+        ucb = self.estimates + self.coef * np.sqrt(np.log(self.total) / (2 * (self.count +1)))
+
+        k = ucb.argmax();
         r = self.bandit.play(k);
-        #self.count[k] += 1;
-        self.estimates[k] += 1. / (self.count[k]+1) * (r - self.estimates[k]);
-        #print(self.estimates)
+
+        self.estimates[k] += 1. / (self.count[k] + 1) * (r - self.estimates[k]);
+    
 
         return k;
         
@@ -95,17 +93,17 @@ def picshow(solvers):
 
 
 if __name__ == '__main__':
-    np.random.seed(2);
+    np.random.seed(1);
     K = 10;
     bandit = Bandit(10);
 
-    egreedy = EGreedy(bandit)
-    egreedy.run(5000);
+    ucb = UCB(bandit, 1)
+    ucb.run(5000);
 
-    picshow([egreedy]);
+    picshow([ucb]);
     #print(bandit.best_prob);
     #print(egreedy.actions)
-    print(egreedy.estimates)
-    print(egreedy.regret)
+    #print(egreedy.estimates)
+    #print(egreedy.regret)
 
     #print(np.random.random(50))

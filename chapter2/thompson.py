@@ -49,30 +49,23 @@ class Solver():
             #self.count[action] += 1;
 
 
-class EGreedy(Solver):
+class Tompson(Solver):
     #某个算法具体的实现,
-    def __init__(self, bandit, epsilon = 0.01, init_prob= 1.0):
-        super().__init__(bandit);
-        self.epsilon = epsilon;
-        self.estimates = np.array([init_prob] * self.bandit.k);
-        self.name = "EGreedy";
-    
-    def run_one_step(self):
-        #choose a k ,and updata the estimates
-        #随机 or 经验
-        if(np.random.random() < self.epsilon):
-            #随机
-            k = np.random.randint(0, self.bandit.k);
-        else:
-            #经验
-            k = np.argmax(self.estimates);
-        
-        r = self.bandit.play(k);
-        #self.count[k] += 1;
-        self.estimates[k] += 1. / (self.count[k]+1) * (r - self.estimates[k]);
-        #print(self.estimates)
+    def __init__(self, bandit):
+        super().__init__( bandit);
+        self._a = np.ones(self.bandit.k);
+        self._b = np.ones(self.bandit.k);
+        self.name = "tom"
 
-        return k;
+    def run_one_step(self):
+        samples = np.random.beta(self._a, self._b);
+        #k = np.argmax(samples);
+        k = samples.argmax();
+        r = self.bandit.play(k);
+
+        self._a[k] += r ;
+        self._b[k] += (1-r);
+        return k; 
         
 
 def picshow(solvers):
@@ -95,17 +88,17 @@ def picshow(solvers):
 
 
 if __name__ == '__main__':
-    np.random.seed(2);
+    np.random.seed(1);
     K = 10;
     bandit = Bandit(10);
 
-    egreedy = EGreedy(bandit)
-    egreedy.run(5000);
+    tom = Tompson(bandit)
+    tom.run(5000);
 
-    picshow([egreedy]);
+    picshow([tom]);
     #print(bandit.best_prob);
     #print(egreedy.actions)
-    print(egreedy.estimates)
-    print(egreedy.regret)
+    #print(egreedy.estimates)
+    #print(egreedy.regret)
 
     #print(np.random.random(50))
